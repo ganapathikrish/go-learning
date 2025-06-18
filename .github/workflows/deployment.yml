@@ -1,0 +1,40 @@
+name: GO Lang Deployment
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build-and-publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            # 1. Checkout Code
+            - name: 'Checkout code'
+              uses: actions/checkout@v4
+
+            # 2. Setup Docker
+            - name: 'Setup Docker'
+              uses: docker/setup-buildx-action@v3
+
+            # 3. Login Docker
+            - name: 'Login Docker'
+              run: |
+                echo "Login using username and password..." 
+                echo "Loggedin successfully..."
+
+            # 4. Build Docker Image
+            - name: 'Build Docker Image'
+              run: 
+                echo "Build Image"
+            
+            # 5. Push Docker Image
+            - name: 'Push Docker Image'
+              run:
+                echo "Push Docker Image"
+            
+            # 6. Deployment
+            - name: 'Deployment'
+              run: 
+                echo "Deployment"
