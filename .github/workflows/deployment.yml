@@ -3,7 +3,7 @@ name: GO Lang Deployment
 on:
     push:
         branches:
-            - main
+            - ganapathi
 
 jobs:
     build-and-publish:
