@@ -1,0 +1,120 @@
+name: 'Deployment Deep'
+
+on:
+    push:
+        branches: [main, dev]
+        tags: []
+        paths: []
+    pull_request:
+        branches: [main]
+        path-ignore: []
+    workflow_dispatch:
+        inputs:
+            environment:
+                descrpiption: 'Target environment'
+                required: true
+                default: 'staging'
+    schedule:
+        - cron: '0 0 * * *'
+    release:
+        types: [created, published]
+
+env:
+    NODE_ENV: production
+    IMAGE_TAG: ${{ github.sha }}
+
+defaults:
+    run:
+        shell: bash
+        working-directory: ./src
+
+permissions: 
+    contents: read
+    deployment: write
+
+concurrency:
+    group: ${{ github.workflow }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: 'Build Job'
+        runs-on: ubuntu-latest
+        
+        # 
+        - run: exit 1
+
+
+        needs: [test]
+        if: github ref == 'ref/heads/main'
+
+        timeout-minutes: 15
+        continue-on-error: false
+
+        startegy: 
+            matrix: 
+                node: [12, 14, 16]
+                os: [ubunut-latest, windows-latest]
+            fail-fast: false
+            max-parallel: 2
+
+        outputs:
+            image_tag: ${{ steps.build.outputs.tag }}
+
+        env: 
+            DB_USER: root
+
+        steps:
+            - name: 'Checkout code'
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with: 
+                node-version: ${{ matrix.node }}
+
+            - name: 'Test runs'
+              run: npm test
+              working-directory: ./backend
+              shell: bash
+
+            - name: Set output
+              id: build
+              run: echo "tag=latest" >> $GITHUB_OUTPUT
+    
+    # 
+    send-notification-if-fails:
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Send Email via Mailer Action
+              uses: dawidd6/action-send-mail@v3
+              with: 
+                server_address: smtp.gmail.com
+                server_port: 465
+                username: ${{ secrets.SMTP_USERNAME }}
+                password: ${{ secrets.SMTP_PASSWORD }}
+                subject: 'CI CD FAILED ${{ github.repository }}'
+                to: ganapathi@gmail.com
+                from: from@gmail.com
+                body: |
+                    The CI/CD workflow **${{ github.event.workflow_run.name }}** has failed.
+                    Commit: ${{ github.event.workflow_run.head_commit.message }}
+                    Actor: ${{ github.event.workflow_run.actor.login }}
+                    URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+
+            - name: 'Mail sned on failure'
+              if: failure()
+              uses: dawidd6/action-send-mail@v3
+              with: 
+                server_address: smtp.gmail.com
+                server_port: 465
+                username:
+                password:
+                subject:
+                to:
+                from:
+                body: |
+
+
+

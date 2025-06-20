@@ -1,0 +1,62 @@
+name: GO Lang Deployment Learning
+
+# Toplevel Key
+on: 
+  push:
+    branches:
+      - test-branch
+  pull_request:
+    branches:
+      - test-branch
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+# ENV
+
+env: # global environment variable
+  ENVIRONMENT: production
+
+defaults:
+  run:
+    shell: bash
+
+# JOBS
+
+jobs:
+  our-job-name:
+    name: 'Title of the Job'
+    runs-on: ubuntu-latest
+
+    needs: [our-job-name]
+    if: failure()
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [14, 16]
+    
+    env: 
+      NODE_ENV: test
+
+    steps:
+      - name: 'step name'
+        id: some_id
+        uses: action_name
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Hello, World"
+
+      - name: 'upload artifact'
+        uses: actions/upload-artifact
+        with: 
+          name: my-artifact
+          path: ./build
+      - name: 'download artifact'
+        uses: actions/download-artifact
+        with:
+          name: my-artifact
+
+  outputs:
+    result: ${{ steps.step_id.outputs.output_key }}
